@@ -1,0 +1,32 @@
+# Local POC stack. Each service maps to an AWS component later:
+#   stubs   -> real LOS / bureau / LMS / collections APIs (gateway targets)
+#   gateway -> AgentCore Gateway + Policy + Identity
+#   bff     -> BFF on ECS/Lambda; the scripted agent -> AgentCore Runtime
+services:
+  stubs:
+    build: .
+    command: sh -c "python -m poc.data.generate && uvicorn poc.stubs.servers:app --host 0.0.0.0 --port 8101"
+    volumes: [lending-data:/data]
+  gateway:
+    build: .
+    command: uvicorn poc.gateway.app:app --host 0.0.0.0 --port 8100
+    environment:
+      POC_STUBS_URL: http://stubs:8101
+    volumes: [records:/data]
+    depends_on: [stubs]
+  bff:
+    build: .
+    command: uvicorn poc.bff.app:app --host 0.0.0.0 --port 8000
+    environment:
+      POC_GATEWAY_URL: http://gateway:8100
+      POC_STUBS_URL: http://stubs:8101
+    depends_on: [gateway]
+  web:
+    build: ./web
+    environment:
+      POC_BFF_URL: http://bff:8000
+    ports: ["5173:5173"]
+    depends_on: [bff]
+volumes:
+  lending-data:
+  records:
