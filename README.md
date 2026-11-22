@@ -30,6 +30,17 @@ make test           # 10 governance tests
 make e2e            # optional: headless browser walkthrough, refreshes docs/screenshots
 ```
 
+**Windows (PowerShell), no `make`:** use the same tasks through `dev.py`:
+
+```powershell
+python dev.py setup
+python dev.py run      # terminal 1
+python dev.py web      # terminal 2 -> http://localhost:5173
+python dev.py test
+```
+
+Needs Python 3.12+ and Node 20+ on PATH.
+
 Or with Docker: `make up`, then open http://localhost:5173. (The compose file was written
 for this POC but not run in the build environment; `make run` + `make web` were.)
 

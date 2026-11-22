@@ -9,6 +9,7 @@ gets the same registry, pin, Cedar and audit checks as a direct call. Only the
 script's printed output returns to the model.
 """
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -54,6 +55,16 @@ def _sdk(tools: list[str]) -> str:
     return SDK_HEADER + "".join(funcs)
 
 
+def _sandbox_env(token: str, trace_id: str) -> dict:
+    """Minimal environment: no inherited secrets. Windows needs SYSTEMROOT for Python to start."""
+    env = {"YUTRIX_GATEWAY_URL": GATEWAY_URL, "YUTRIX_CODE_TOKEN": token, "YUTRIX_TRACE_ID": trace_id,
+           "PATH": os.environ.get("PATH", "/usr/bin:/bin")}
+    for key in ("SYSTEMROOT", "TEMP", "TMP"):
+        if key in os.environ:
+            env[key] = os.environ[key]
+    return env
+
+
 def run_code(code: str, *, user_claims: dict, case_id: str, tools: list[str], trace_id: str,
              timeout: int = 20) -> dict:
     token = issue_code_token(user_claims, case_id, tools)
@@ -62,8 +73,7 @@ def run_code(code: str, *, user_claims: dict, case_id: str, tools: list[str], tr
         Path(d, "main.py").write_text(textwrap.dedent(code))
         try:
             p = subprocess.run([sys.executable, "-E", "-s", "-B", "main.py"], cwd=d, capture_output=True, text=True,
-                               timeout=timeout, env={"YUTRIX_GATEWAY_URL": GATEWAY_URL, "YUTRIX_CODE_TOKEN": token,
-                                                     "YUTRIX_TRACE_ID": trace_id, "PATH": "/usr/bin:/bin"})
+                               timeout=timeout, env=_sandbox_env(token, trace_id))
         except subprocess.TimeoutExpired:
             return {"ok": False, "stdout": "", "stderr": f"timed out after {timeout}s"}
     out = p.stdout[-MAX_OUTPUT:]
