@@ -44,6 +44,17 @@ Needs Python 3.12+ and Node 20+ on PATH.
 Or with Docker: `make up`, then open http://localhost:5173. (The compose file was written
 for this POC but not run in the build environment; `make run` + `make web` were.)
 
+## Driving the demo with an agent (optional)
+
+`scripts/agent-chrome.ps1` starts a **separate Chrome profile** for coding agents using
+[Browser Harness / browser-use](https://github.com/browser-use/browser-harness): its own profile
+folder (no personal logins), remote debugging on `127.0.0.1:9222` only.
+
+```powershell
+.\scripts\agent-chrome.ps1
+$env:BU_CDP_URL = "http://127.0.0.1:9222"   # then start Claude Code / Codex in this terminal
+```
+
 ## Architecture
 
 ```
