@@ -20,7 +20,7 @@ def main() -> None:
         from poc.gateway.registry import pin
         pin()
     for target, port in SERVICES:
-        cfg = uvicorn.Config(target, host="0.0.0.0", port=port, log_level="warning")
+        cfg = uvicorn.Config(target, host="127.0.0.1", port=port, log_level="warning")  # local only
         threading.Thread(target=uvicorn.Server(cfg).run, daemon=True).start()
         print(f"  {target:<28} http://127.0.0.1:{port}")
     print("Running. Web app: cd web && npm run dev  ->  http://localhost:5173")
